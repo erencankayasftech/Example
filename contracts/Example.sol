@@ -4,46 +4,55 @@ pragma solidity ^0.8.0;
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
-contract NFT is ERC721Enumerable, Ownable {
+contract NFTExample is ERC721Enumerable, Ownable {
     uint256 private nextTokenId = 1;
-    address private liquidityWallet;
-    address private treasuryWallet;
-    uint256 private royaltyFeePercentage = 10;
+    address private liquidAccount;
+    address private treasuryAccount;
+    uint256 private royaltyFeeRate = 1;
 
-    struct NFTMetadata {
-        string name;
-        string tokenURI;
+    struct NFTMetadataAccount {
+        string Name;
+        string TokenUrl;
     }
 
-    mapping(uint256 => NFTMetadata) private nftMetadata;
+    mapping(uint256 => NFTMetadataAccount) private nftMetadataAccount;
 
     constructor(string memory name, string memory symbol) ERC721(name, symbol) {}
 
-    function mintNFT(string memory name, string memory tokenURI, uint256 price) external {
-        require(price > 0, "Price must be greater than 0");
+    function setNFTValuables(string memory _name, string memory _tokenUrl, uint256 price) external {
+    
+    if(price > 0){
         uint256 tokenId = nextTokenId;
         _mint(msg.sender, tokenId);
-        nftMetadata[tokenId] = NFTMetadata(name, tokenURI);
+        nftMetadataAccount[tokenId] = NFTMetadataAccount(_name, _tokenUrl);
         nextTokenId++;
 
-        uint256 royaltyFee = (price * royaltyFeePercentage) / 100;
-        uint256 treasuryAmount = royaltyFee * 6 / 10;
-        uint256 liquidityAmount = royaltyFee * 4 / 10;
-        payable(treasuryWallet).transfer(treasuryAmount);
-        payable(liquidityWallet).transfer(liquidityAmount);
+        uint256 royaltyFee = (price * royaltyFeeRate) / 10;
+        uint256 treasuryAmount = royaltyFee * 3 / 5;
+        uint256 liquidityAmount = royaltyFee * 2 / 5;
+        payable(treasuryAccount).transfer(treasuryAmount);
+        payable(liquidAccount).transfer(liquidityAmount);
+    }
+    else{
+        revert("Fiyat O'dan buyuk olmalidir.");
     }
 
-    function setRoyaltyFeePercentage(uint256 percentage) external onlyOwner {
-        require(percentage <= 100, "Percentage must be less than or equal to 100");
-        royaltyFeePercentage = percentage;
+     
     }
 
-    function setWallets(address _liquidityWallet, address _treasuryWallet) external onlyOwner {
-        liquidityWallet = _liquidityWallet;
-        treasuryWallet = _treasuryWallet;
+    function setRoyaltyFeeRate(uint256 rate) external onlyOwner {
+        require(rate <= 100, "Oran 100'den dusuk olmalidir.");
+        royaltyFeeRate = rate;
     }
 
-    function getNFTMetadata(uint256 tokenId) external view returns (NFTMetadata memory) {
-        return nftMetadata[tokenId];
+    function setWallesAccounts(address _liquidAccount, address _treasuryAccount) external onlyOwner {
+        require(_liquidAccount.balance > 0 , "Likidite hesabinin bakiyesi 0'dan buyuk olmalidir.");
+        
+        liquidAccount = _liquidAccount;
+        treasuryAccount = _treasuryAccount;
+    }
+
+    function getNFTMetadataAccount(uint256 tokenId) external view returns (NFTMetadataAccount memory) {
+        return nftMetadataAccount[tokenId];
     }
 }
